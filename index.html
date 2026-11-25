@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ACOUSTIC — Living Typography &amp; Sound-Reactive 3D Sculpture</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <canvas id="acoustic-canvas" aria-label="Interactive 3D Typographic Sculpture"></canvas>
+
+    <div id="webgl-fallback" class="webgl-fallback" hidden>
+      <p>WebGL 2.0 / 1.0 hardware acceleration is unavailable in this browser.</p>
+    </div>
+
+    <div class="ui-layer" data-view="hero">
+      <!-- Top Bar -->
+      <header class="top-bar">
+        <div class="brand">
+          <span class="brand-mark"></span>
+          <span class="brand-name">ACOUSTIC</span>
+          <span class="brand-tag">SONIC TYPOGRAPHY INSTALLATION</span>
+        </div>
+
+        <nav class="top-nav" aria-label="Primary navigation">
+          <button type="button" id="enter-studio-btn" class="nav-pill primary">
+            WORKSPACE
+          </button>
+          <button
+            type="button"
+            id="open-notes-btn"
+            class="nav-pill"
+            aria-expanded="false"
+            aria-controls="technical-notes-drawer"
+          >
+            ABOUT &amp; NOTES
+          </button>
+        </nav>
+
+        <div class="status-group">
+          <div class="status-pill" id="audio-status">AUDIO: STANDBY</div>
+          <div class="status-pill subtle" id="engine-status">LIVING FIELD ACTIVE</div>
+        </div>
+      </header>
+
+      <!-- Landing / Hero Block -->
+      <section class="hero-overlay" id="hero-section">
+        <p class="eyebrow">LIVING TYPOGRAPHY &amp; SOUND-REACTIVE 3D SCULPTURE</p>
+        <h1 class="hero-title">Form shaped by frequency.</h1>
+        <p class="hero-subtitle">
+          Sculpt custom words and phrases in real time using live microphone input, uploaded audio tracks, visual presets, and cursor wave physics.
+        </p>
+
+        <div class="hero-actions">
+          <button type="button" id="hero-cta-btn" class="cta-btn">
+            LAUNCH SCULPTURE STUDIO
+          </button>
+          <span class="interaction-hint">Drag across text to deform · Tap or click to ripple</span>
+        </div>
+
+        <div class="band-meters" aria-label="Live frequency bands">
+          <div class="meter-item">
+            <span>BASS</span>
+            <div class="meter-track"><div class="meter-fill" id="meter-bass"></div></div>
+          </div>
+          <div class="meter-item">
+            <span>MID</span>
+            <div class="meter-track"><div class="meter-fill" id="meter-mid"></div></div>
+          </div>
+          <div class="meter-item">
+            <span>TREBLE</span>
+            <div class="meter-track"><div class="meter-fill" id="meter-treble"></div></div>
+          </div>
+          <div class="meter-item">
+            <span>AMP</span>
+            <div class="meter-track"><div class="meter-fill" id="meter-amp"></div></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Sculpture Workspace Dock -->
+      <section class="workspace-dock" id="workspace-dock" aria-label="Sculpture studio controls">
+        <div class="preset-bar" role="group" aria-label="Visual presets" id="preset-buttons"></div>
+
+        <div class="hud-panels">
+          <!-- Audio Deck -->
+          <div class="hud-panel audio-panel" role="region" aria-label="Audio input controls">
+            <div class="audio-top-row">
+              <button type="button" id="mic-toggle-btn" class="action-btn" aria-pressed="false">
+                MIC OFF
+              </button>
+
+              <label for="audio-file-input" class="action-btn secondary" tabindex="0">
+                UPLOAD AUDIO
+              </label>
+              <input
+                id="audio-file-input"
+                type="file"
+                accept="audio/*,.mp3,.wav,.ogg,.m4a,.aac,.flac"
+                class="sr-only"
+              />
+
+              <button
+                type="button"
+                id="play-pause-btn"
+                class="action-btn"
+                disabled
+                aria-label="Play or pause uploaded audio"
+              >
+                PLAY
+              </button>
+
+              <button
+                type="button"
+                id="audio-reset-btn"
+                class="ghost-btn small"
+                aria-label="Clear audio source"
+              >
+                CLEAR
+              </button>
+            </div>
+
+            <div class="audio-transport-row">
+              <span class="time-readout" id="audio-current-time">00:00</span>
+              <input
+                id="audio-seek-slider"
+                type="range"
+                min="0"
+                max="100"
+                step="0.1"
+                value="0"
+                disabled
+                aria-label="Audio playback progress"
+              />
+              <span class="time-readout" id="audio-duration">00:00</span>
+
+              <div class="volume-box">
+                <label for="audio-volume-slider" class="hud-label inline">VOL</label>
+                <input
+                  id="audio-volume-slider"
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.01"
+                  value="0.8"
+                  aria-label="Audio volume"
+                />
+              </div>
+            </div>
+
+            <div class="audio-track-meta">
+              <span id="audio-track-name">No audio file loaded · Mic requires permission on click</span>
+            </div>
+          </div>
+
+          <!-- Typography, Color & Cursor Controls -->
+          <div class="hud-panel typo-panel" role="region" aria-label="Typography and interaction controls">
+            <div class="hud-controls-row">
+              <div class="hud-control-group">
+                <label for="sculpture-text-input" class="hud-label">TEXT</label>
+                <div class="input-wrapper">
+                  <input
+                    id="sculpture-text-input"
+                    type="text"
+                    value="ACOUSTIC"
+                    maxlength="16"
+                    autocomplete="off"
+                    spellcheck="false"
+                    aria-label="Enter sculpture text"
+                  />
+                  <select id="sculpture-font-select" aria-label="Select typeface">
+                    <option value="helvetiker">HELVETIKER</option>
+                    <option value="optimer">OPTIMER</option>
+                    <option value="gentilis">GENTILIS</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="hud-control-group compact">
+                <span class="hud-label">ALIGN</span>
+                <div class="segmented-toggle" role="group" aria-label="Text alignment">
+                  <button type="button" class="seg-btn align-btn" data-align="left" aria-label="Align left">L</button>
+                  <button type="button" class="seg-btn align-btn active" data-align="center" aria-label="Align center">C</button>
+                  <button type="button" class="seg-btn align-btn" data-align="right" aria-label="Align right">R</button>
+                </div>
+              </div>
+
+              <div class="hud-control-group compact">
+                <label for="sculpture-size-slider" class="hud-label">SCALE</label>
+                <input
+                  id="sculpture-size-slider"
+                  type="range"
+                  min="0.65"
+                  max="1.65"
+                  step="0.05"
+                  value="1.2"
+                  aria-label="Adjust font size"
+                />
+              </div>
+
+              <div class="hud-control-group compact">
+                <label for="sculpture-spacing-slider" class="hud-label">TRACKING</label>
+                <input
+                  id="sculpture-spacing-slider"
+                  type="range"
+                  min="-0.08"
+                  max="0.45"
+                  step="0.01"
+                  value="0.08"
+                  aria-label="Adjust letter spacing"
+                />
+              </div>
+
+              <div class="hud-control-group color-group">
+                <label for="accent-color-picker" class="hud-label">TINT</label>
+                <input
+                  id="accent-color-picker"
+                  type="color"
+                  value="#7c3aed"
+                  aria-label="Custom primary accent color"
+                />
+              </div>
+
+              <div class="hud-control-group compact">
+                <span class="hud-label">CURSOR FIELD</span>
+                <div class="segmented-toggle" role="group" aria-label="Cursor interaction mode">
+                  <button type="button" id="mode-repel" class="seg-btn active" data-mode="repel">
+                    REPEL
+                  </button>
+                  <button type="button" id="mode-attract" class="seg-btn" data-mode="attract">
+                    ATTRACT
+                  </button>
+                </div>
+              </div>
+
+              <button type="button" id="reset-sculpture-btn" class="ghost-btn" aria-label="Reset sculpture and preset">
+                RESET
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Footer -->
+      <footer class="site-footer">
+        <div class="footer-brand">
+          <span>ACOUSTIC</span>
+          <span class="footer-copy">&copy; 2026 ACOUSTIC STUDIO</span>
+        </div>
+
+        <div class="telemetry" aria-hidden="true">
+          <span id="poly-count">VERTICES: 0</span>
+          <span class="divider">/</span>
+          <span id="cursor-readout">FIELD: AMBIENT</span>
+        </div>
+
+        <div class="footer-links">
+          <a href="#github-placeholder" class="footer-link" aria-label="GitHub repository placeholder">
+            GITHUB
+          </a>
+          <a href="#portfolio-placeholder" class="footer-link" aria-label="Portfolio showcase placeholder">
+            PORTFOLIO
+          </a>
+        </div>
+      </footer>
+    </div>
+
+    <!-- About & Technical Notes Drawer -->
+    <aside
+      id="technical-notes-drawer"
+      class="notes-drawer"
+      aria-label="About and Technical Notes"
+      aria-hidden="true"
+    >
+      <div class="notes-inner">
+        <div class="notes-header">
+          <div>
+            <p class="eyebrow">ARCHITECTURE &amp; CRAFT</p>
+            <h2 class="notes-title">About &amp; Technical Notes</h2>
+          </div>
+          <button type="button" id="close-notes-btn" class="ghost-btn small" aria-label="Close notes">
+            CLOSE
+          </button>
+        </div>
+
+        <div class="notes-body">
+          <article class="note-block">
+            <h3>Creative Concept</h3>
+            <p>
+              ACOUSTIC treats letterforms as physical, resonant membranes suspended in dark space. Words respond to voice, music, and touch through wave propagation, surface tension, and Fresnel edge luminescence.
+            </p>
+          </article>
+
+          <article class="note-block">
+            <h3>Web Audio API &amp; Spectral Analysis</h3>
+            <p>
+              A single <code>AudioContext</code> and <code>AnalyserNode</code> (FFT 2048) sample live microphone streams or uploaded audio tracks strictly on user action. Frequency bins are mapped into bass, mid, and treble bands alongside overall amplitude and spectral distribution.
+            </p>
+          </article>
+
+          <article class="note-block">
+            <h3>GLSL Shaders &amp; Frequency Coupling</h3>
+            <p>
+              Vertex displacement combines 3D Simplex noise, overlapping waves, and spectral uniforms directly on the GPU, recomputing surface normals via finite differences so wave crests catch crisp specular highlights without CPU buffer uploads.
+            </p>
+          </article>
+
+          <article class="note-block">
+            <h3>Procedural Geometry &amp; Interaction</h3>
+            <p>
+              Individual beveled glyphs are positioned with custom tracking and alignment, merged, and adaptively subdivided into uniform triangles so cursor push/pull forces and radial click ripples deform smoothly at 60 FPS.
+            </p>
+          </article>
+        </div>
+      </div>
+    </aside>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
